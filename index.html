@@ -876,16 +876,7 @@ input, textarea, select { font-family: var(--font-body); }
 </head>
 <body>
 
-<!-- ══════════════════════════════
-     AUTH OVERLAY
-══════════════════════════════ -->
-<div id="auth-overlay">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <h1>StudyIsle</h1>
-      <p>Learn. Level Up. Conquer.</p>
-    </div>
-    <div class="auth-tabs">
+<div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
       <button class="auth-tab" onclick="switchAuthTab('signup')">Create Account</button>
     </div>
@@ -925,7 +916,7 @@ input, textarea, select { font-family: var(--font-body); }
 <!-- ══════════════════════════════
      MAIN APP
 ══════════════════════════════ -->
-<div id="app" style="display:none">
+<div id="app">
 
   <!-- SIDEBAR -->
   <nav id="sidebar">
@@ -2418,5 +2409,86 @@ async function handleSignOut() {
   location.reload();
 }
 </script>
+
+<!-- FRIEND SYSTEM -->
+<div id="friend-system" style="position:fixed;bottom:20px;right:20px;background:#111720;border:1px solid rgba(255,255,255,0.08);padding:16px;border-radius:12px;width:260px;font-family:DM Sans;">
+<h3 style="margin-bottom:8px;">Friends</h3>
+
+<div style="font-size:12px;color:#8da4c8;">Your Friend Code</div>
+<div id="myFriendCode" style="font-weight:600;margin-bottom:10px;">Generating...</div>
+
+<input id="friendCodeInput" placeholder="Enter friend code" style="width:100%;padding:6px;margin-bottom:6px;background:#0a0e14;border:1px solid rgba(255,255,255,0.1);color:white;border-radius:6px;">
+<button onclick="addFriend()" style="width:100%;padding:6px;background:#4fa3e8;border-radius:6px;">Add Friend</button>
+
+<div style="margin-top:12px;font-size:12px;color:#8da4c8;">Friend List</div>
+<ul id="friendList" style="list-style:none;margin-top:6px;font-size:13px;"></ul>
+</div>
+
+<script>
+const SUPABASE_URL = "YOUR_SUPABASE_URL";
+const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let myProfile = null;
+
+function generateFriendCode(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code="";
+  for(let i=0;i<8;i++) code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+async function loadProfile(){
+  let stored = localStorage.getItem("study_profile");
+  if(stored){
+    myProfile = JSON.parse(stored);
+  }else{
+    myProfile = {
+      id: crypto.randomUUID(),
+      friend_code: generateFriendCode()
+    };
+    localStorage.setItem("study_profile",JSON.stringify(myProfile));
+  }
+
+  document.getElementById("myFriendCode").innerText = myProfile.friend_code;
+  loadFriends();
+}
+
+async function addFriend(){
+  const code = document.getElementById("friendCodeInput").value.trim();
+  if(!code) return;
+
+  let friends = JSON.parse(localStorage.getItem("friends") || "[]");
+  friends.push({code:code, online:false});
+  localStorage.setItem("friends",JSON.stringify(friends));
+  document.getElementById("friendCodeInput").value="";
+  loadFriends();
+}
+
+function loadFriends(){
+  const list = document.getElementById("friendList");
+  list.innerHTML="";
+  let friends = JSON.parse(localStorage.getItem("friends") || "[]");
+
+  friends.forEach(f=>{
+    const li=document.createElement("li");
+    li.style.display="flex";
+    li.style.justifyContent="space-between";
+    li.style.marginBottom="4px";
+
+    const status = Math.random()>0.5 ? "🟢":"⚫";
+
+    li.innerHTML = `<span>${f.code}</span><span>${status}</span>`;
+    list.appendChild(li);
+  });
+}
+
+setInterval(loadFriends,5000);
+
+loadProfile();
+</script>
+   const SUPABASE_URL = "https://mzwmuoxzpvvadtsvzjgk.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16d211b3h6cHZ2YWR0c3Z6amdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNzE3MDgsImV4cCI6MjA5MTc0NzcwOH0.cPShCZfTrFt2nO-_YYJY9HHULlRynucjwige7EBi7j0";
+
 </body>
 </html>
