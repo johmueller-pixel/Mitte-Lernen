@@ -2339,6 +2339,84 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script> const SUPABASE_URL = 'https://mzwmuoxzpvvadtsvzjgk.supabase.co';
    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16d211b3h6cHZ2YWR0c3Z6amdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxNzE3MDgsImV4cCI6MjA5MTc0NzcwOH0.cPShCZfTrFt2nO-_YYJY9HHULlRynucjwige7EBi7j0';
-   
+   <script>
+// Initialize Supabase
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Switch between login & signup
+function switchAuthTab(tab) {
+  const loginForm = document.getElementById("login-form");
+  const signupForm = document.getElementById("signup-form");
+  const tabs = document.querySelectorAll(".auth-tab");
+
+  tabs.forEach(t => t.classList.remove("active"));
+
+  if (tab === "login") {
+    loginForm.classList.remove("hidden");
+    signupForm.classList.add("hidden");
+    tabs[0].classList.add("active");
+  } else {
+    loginForm.classList.add("hidden");
+    signupForm.classList.remove("hidden");
+    tabs[1].classList.add("active");
+  }
+}
+
+// Login
+async function handleLogin() {
+  const email = document.getElementById("login-email").value;
+  const password = document.getElementById("login-password").value;
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    document.getElementById("auth-error").innerText = error.message;
+  } else {
+    document.getElementById("auth-overlay").style.display = "none";
+    document.getElementById("app").style.display = "flex";
+  }
+}
+
+// Signup
+async function handleSignup() {
+  const email = document.getElementById("signup-email").value;
+  const password = document.getElementById("signup-password").value;
+  const name = document.getElementById("signup-name").value;
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    document.getElementById("auth-error").innerText = error.message;
+    return;
+  }
+
+  // Optional: create profile
+  if (data.user) {
+    await supabase.from("profiles").insert([
+      {
+        id: data.user.id,
+        display_name: name,
+        total_minutes: 0,
+        level: 1
+      }
+    ]);
+  }
+
+  document.getElementById("auth-error").innerText = "Account created! You can now sign in.";
+  switchAuthTab("login");
+}
+
+// Logout
+async function handleSignOut() {
+  await supabase.auth.signOut();
+  location.reload();
+}
+</script>
 </body>
 </html>
